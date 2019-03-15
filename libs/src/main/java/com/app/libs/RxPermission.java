@@ -309,6 +309,7 @@ public class RxPermission {
     String title = "权限申请";
     String button = "确定";
     boolean cancelable = false;
+    OnCompleteListener onCompleteListener;
 
     private RxPermission(Activity activity) {
         this.activity = activity;
@@ -317,6 +318,12 @@ public class RxPermission {
 
     public static RxPermission with(Activity activity) {
         return new RxPermission(activity);
+    }
+
+    public RxPermission complete(OnCompleteListener onCompleteListener)
+    {
+        this.onCompleteListener = onCompleteListener;
+        return this;
     }
 
     /**
@@ -446,6 +453,9 @@ public class RxPermission {
                 overlay((RxOverlayOption) option, option.hasReminder());
             }
         } else {
+            if (onCompleteListener != null) {
+                onCompleteListener.onComplete();
+            }
             permissionList = null;
             activity = null;
         }
