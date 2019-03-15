@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.app.libs">
+
+    <application>
+        <activity
+            android:name=".RxPermissionsActivity"
+            android:launchMode="singleInstance"
+            android:theme="@style/MyTheme" />
+    </application>
+</manifest>
