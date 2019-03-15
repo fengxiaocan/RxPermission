@@ -1,6 +1,7 @@
 # RxPermission
 使用链式编程调用AndPermission的权限申请库
 使用方法在申请权限的时候不用分开调用AndPermission的权限申请,直接如下:
+
                 RxPermission.with(MainActivity.this)
                             .runtime(Permission.WRITE_EXTERNAL_STORAGE)
                             .reminder(TIP.SD)
@@ -9,7 +10,6 @@
                                 public void hasPermission() {
                                     Toast.makeText(MainActivity.this,"有储存读写权限",Toast.LENGTH_SHORT).show();
                                 }
-
                                 @Override
                                 public void noPermission() {
                                     Toast.makeText(MainActivity.this,"没有储存读写权限",Toast.LENGTH_SHORT).show();
@@ -23,7 +23,6 @@
                                 public void hasPermission() {
                                     Toast.makeText(MainActivity.this,"有相机权限",Toast.LENGTH_SHORT).show();
                                 }
-
                                 @Override
                                 public void noPermission() {
                                     Toast.makeText(MainActivity.this,"没有相机权限",Toast.LENGTH_SHORT).show();
