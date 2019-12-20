@@ -3,7 +3,7 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion 28
     defaultConfig {
-        minSdkVersion 24
+        minSdkVersion 14
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -27,6 +27,6 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.yanzhenjie.permission:x:2.0.1'
-    implementation 'com.github.fengxiaocan:RxDialog:1.0.0'
+    implementation 'com.yanzhenjie.permission:x:+'
+    implementation 'com.github.fengxiaocan:RxDialog:+'
 }
