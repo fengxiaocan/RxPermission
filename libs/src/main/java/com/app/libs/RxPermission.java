@@ -7,6 +7,8 @@ import android.os.Binder;
 import android.os.Build;
 import android.provider.Settings;
 
+import androidx.core.app.NotificationManagerCompat;
+
 import com.app.dialoglib.RxAlertDialog;
 import com.yanzhenjie.permission.AndPermission;
 
@@ -15,8 +17,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
-
-import androidx.core.app.NotificationManagerCompat;
 
 /**
  * Android中的各种访问权限Permission含义
@@ -498,7 +498,7 @@ public class RxPermission {
                          .onGranted(new MyAction<List<String>>(option, true))
                          .onDenied(new RuntimeAction(option))
                          .start();
-        } else {
+        } else if (!AndPermission.hasPermissions(activity, option.permissionGroup)) {
             showDialog(option);
         }
     }
@@ -510,8 +510,8 @@ public class RxPermission {
      * @param isNeedShowDialog
      */
     private void notification(RxNotificationOption option, boolean isNeedShowDialog) {
-        if (NotificationManagerCompat.from(activity)
-                                     .areNotificationsEnabled() || !isNeedShowDialog)
+        if (NotificationManagerCompat.from(activity).areNotificationsEnabled() ||
+            !isNeedShowDialog)
         {
             //通知栏可以使用
             AndPermission.with(activity)
@@ -521,7 +521,7 @@ public class RxPermission {
                          .onGranted(new MyAction<Void>(option, true))
                          .onDenied(new MyAction<Void>(option, false))
                          .start();
-        } else {
+        } else if (!NotificationManagerCompat.from(activity).areNotificationsEnabled()) {
             showDialog(option);
         }
     }
@@ -542,7 +542,7 @@ public class RxPermission {
                          .onGranted(new MyAction<Void>(option, true))
                          .onDenied(new MyAction<Void>(option, false))
                          .start();
-        } else {
+        } else if (!isCanWrite()) {
             showDialog(option);
         }
     }
@@ -567,7 +567,7 @@ public class RxPermission {
                          .onGranted(new MyAction<Void>(option, true))
                          .onDenied(new MyAction<Void>(option, false))
                          .start();
-        } else {
+        } else if (!canOverlay()) {
             showDialog(option);
         }
     }
@@ -582,7 +582,7 @@ public class RxPermission {
                          .onGranted(new MyAction<File>(option, true))
                          .onDenied(new MyAction<File>(option, false))
                          .start();
-        } else {
+        } else if (!canInstall()) {
             showDialog(option);
         }
     }
@@ -594,8 +594,7 @@ public class RxPermission {
      */
     private boolean canInstall() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            return activity.getPackageManager()
-                           .canRequestPackageInstalls();
+            return activity.getPackageManager().canRequestPackageInstalls();
         }
         return true;
     }
@@ -619,8 +618,7 @@ public class RxPermission {
                     return false;
                 }
                 String str2 = (String) obj;
-                obj = cls.getMethod("getSystemService", String.class)
-                         .invoke(activity, str2);
+                obj = cls.getMethod("getSystemService", String.class).invoke(activity, str2);
                 cls = Class.forName("android.app.AppOpsManager");
                 Field declaredField2 = cls.getDeclaredField("MODE_ALLOWED");
                 declaredField2.setAccessible(true);
