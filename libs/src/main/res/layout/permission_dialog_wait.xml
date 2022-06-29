@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Permission.MatchParent"
+    android:gravity="center"
+    android:paddingStart="@dimen/permission_dp_20"
+    android:paddingTop="@dimen/permission_dp_5"
+    android:paddingEnd="@dimen/permission_dp_20"
+    android:paddingBottom="@dimen/permission_dp_5"
+    tools:background="@android:color/background_dark">
+
+    <ProgressBar
+        style="@style/Permission.Widget.Progress.Wait"
+        android:layout_width="@dimen/permission_dp_30"
+        android:layout_height="@dimen/permission_dp_30" />
+
+    <TextView
+        style="@style/Permission.WrapContent"
+        android:layout_marginStart="@dimen/permission_dp_10"
+        android:layout_marginLeft="@dimen/permission_dp_10"
+        android:text="@string/permission_requesting"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/permission_sp_16" />
+
+</LinearLayout>

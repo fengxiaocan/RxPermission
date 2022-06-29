@@ -16,7 +16,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    productFlavors {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -25,8 +27,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0-alpha01'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'io.reactivex.rxjava2:rxjava:latest.release'
-    implementation 'com.yanzhenjie.permission:support:latest.release'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.3.0-alpha03'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0-alpha03'
+    //implementation 'com.yanzhenjie:permission:2.0.3'
+    implementation 'com.github.fengxiaocan:RxDialog:v1.2.3'
+    implementation project(path: ':libs')
 }

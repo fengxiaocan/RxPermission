@@ -1,34 +1,51 @@
 package com.app.libs;
 
-import android.text.TextUtils;
+import com.app.permission.Rationale;
 
 public abstract class PermissionOption<T> {
-    OnPermissionCallback callback;
-    RxPermission rxPermission;
-    String reminder;
+    final XPermission permission;
 
-    public PermissionOption(RxPermission rxPermission) {
-        this.rxPermission = rxPermission;
+    OnPermissionCallback callback;
+    ReminderOption reminderOption;
+    Rationale rationale;
+
+    public PermissionOption(XPermission permission) {
+        this.permission = permission;
     }
 
-    public abstract T callback(OnPermissionCallback callback);
+    public T callback(OnPermissionCallback callback) {
+        this.callback = callback;
+        return (T) this;
+    }
 
-    public abstract T reminder(String reminder);
+    public T reminder(String reminder) {
+        this.reminderOption = new ReminderOption(reminder);
+        return (T) this;
+    }
 
-    String reminder() {
-        return reminder;
+    public T reminder(ReminderOption option) {
+        this.reminderOption = option;
+        return (T) this;
+    }
+
+    public T rationale(Rationale rationale) {
+        this.rationale = rationale;
+        return (T) this;
+    }
+
+    ReminderOption reminder() {
+        return reminderOption;
     }
 
     boolean hasReminder() {
-        return !TextUtils.isEmpty(reminder);
+        return reminderOption != null;
     }
 
-    void recycler() {
-        callback = null;
-        rxPermission = null;
+    public XPermission commit() {
+        return permission.addOption(this);
     }
 
-    public RxPermission commit() {
-        return rxPermission.addOption(this);
+    final void onNext() {
+        permission.request();
     }
 }

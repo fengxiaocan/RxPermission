@@ -1,22 +1,13 @@
 package com.app.libs;
 
-import android.app.Activity;
-import android.app.AppOpsManager;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Binder;
-import android.os.Build;
-import android.provider.Settings;
+import android.util.Log;
 
-import androidx.core.app.NotificationManagerCompat;
-
-import com.app.dialoglib.RxAlertDialog;
-import com.yanzhenjie.permission.AndPermission;
+import com.app.permission.AndPermission;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Android中的各种访问权限Permission含义
@@ -303,227 +294,54 @@ import java.util.List;
  * <p>
  * 可以看出Android中对资源以及服务的访问都非常严格，另外，在程序打包成APK的时候也需要对软件进行签名。
  */
-public class RxPermission {
-    Activity activity;
-    LinkedList<PermissionOption> permissionList;
-    String title = "权限申请";
-    String button = "确定";
-    boolean cancelable = false;
+public class RxPermission extends XPermission {
+    Context context;
+    LinkedList<PermissionOption> permissionList = new LinkedList<>();
     OnCompleteListener onCompleteListener;
 
-    private RxPermission(Activity activity) {
-        this.activity = activity;
-        permissionList = new LinkedList<>();
+    private RxPermission(Context context) {
+        this.context = context;
     }
 
-    public static RxPermission with(Activity activity) {
+    public static RxPermission with(Context activity) {
         return new RxPermission(activity);
     }
 
-    public RxPermission complete(OnCompleteListener onCompleteListener)
-    {
+    public RxPermission complete(OnCompleteListener onCompleteListener) {
         this.onCompleteListener = onCompleteListener;
         return this;
     }
 
-    /**
-     * 设置标题
-     *
-     * @param title
-     * @return
-     */
-    public RxPermission remindTitle(String title) {
-        this.title = title;
-        return this;
-    }
-
-    /**
-     * 设置按钮文字
-     *
-     * @param button
-     * @return
-     */
-    public RxPermission button(String button) {
-        this.button = button;
-        return this;
-    }
-
-    /**
-     * 询问框是否能取消
-     *
-     * @return
-     */
-    //    public RxPermission cancelable(boolean cancelable) {
-    //        this.cancelable = cancelable;
-    //        return this;
-    //    }
-    void delectFirst() {
-        permissionList.removeFirst();
-    }
-
-    /**
-     * 运行时权限配置
-     *
-     * @param permission
-     * @return
-     */
-    public RxRunTimeOption runtime(String... permission) {
-        return new RxRunTimeOption(this, permission);
-    }
-
-    public RxRunTimeOption runtime(String permission) {
-        return new RxRunTimeOption(this, permission);
-    }
-
-    /**
-     * 通知权限配置
-     *
-     * @return
-     */
-    public RxNotificationOption notification() {
-        return new RxNotificationOption(this);
-    }
-
-    /**
-     * 进入设置activity权限配置
-     *
-     * @return
-     */
-    public RxSettingOption setting() {
-        return new RxSettingOption(this);
-    }
-
-    /**
-     * 请求在其他App顶部绘制
-     * 使用AndPermission也需要在manifest.xml中添加android.permission.SYSTEM_ALERT_WINDOW权限。
-     * <p>
-     * 从Android6.0开始使用WindowManager.LayoutParams.TYPE_SYSTEM_ALERT需要用户授权，
-     * 从Android8.0开始它被替换为WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY，
-     * 并且也需要用户授权。部分中国产手机在Android6.0以下就需要用户授权WindowManager.LayoutParams.TYPE_SYSTEM_ALERT，
-     * 因此AndPermission也兼容了中国产手机Android6.0以下的系统。
-     *
-     * @return
-     */
-    public RxOverlayOption overlay() {
-        return new RxOverlayOption(this);
-    }
-
-    /**
-     * 使用AndPermission也需要在manifest.xml中添加android.permission.REQUEST_INSTALL_PACKAGES权限，
-     * 并且调用AndPermission的安装代码之前需要保证App拥有外部存储设备读写权限。
-     *
-     * @param file
-     * @return
-     */
-    public RxInstallOption install(File file) {
-        return new RxInstallOption(this, file);
-    }
-
-    /**
-     * 使用AndPermission也需要在manifest.xml中添加android.permission.REQUEST_INSTALL_PACKAGES权限，
-     * 并且调用AndPermission的安装代码之前需要保证App拥有外部存储设备读写权限。
-     *
-     * @param file
-     * @return
-     */
-    public RxInstallOption install(String file) {
-        return new RxInstallOption(this, new File(file));
-    }
-
-    RxPermission addOption(PermissionOption option) {
-        permissionList.add(option);
-        return this;
-    }
-
-    /**
-     * 开启所有的事务
-     */
-    public void request() {
-        if (permissionList != null && permissionList.size() > 0) {
-            PermissionOption option = permissionList.get(0);
-            if (option instanceof RxRunTimeOption) {
-                runtime((RxRunTimeOption) option, option.hasReminder());
-            } else if (option instanceof RxNotificationOption) {
-                notification((RxNotificationOption) option, option.hasReminder());
-            } else if (option instanceof RxSettingOption) {
-                setting((RxSettingOption) option, option.hasReminder());
-            } else if (option instanceof RxInstallOption) {
-                install((RxInstallOption) option, option.hasReminder());
-            } else if (option instanceof RxOverlayOption) {
-                overlay((RxOverlayOption) option, option.hasReminder());
-            }
-        } else {
-            if (onCompleteListener != null) {
-                onCompleteListener.onComplete();
-            }
-            permissionList = null;
-            activity = null;
-        }
-    }
-
-    private void showDialog(PermissionOption option) {
-        RxAlertDialog.with(activity)
-                     .title(title)
-                     .message(option.reminder())
-                     .middleButton(button)
-                     .middleListener(dialog -> {
-                         dialog.dismiss();
-                         if (option instanceof RxRunTimeOption) {
-                             runtime((RxRunTimeOption) option, false);
-                         } else if (option instanceof RxNotificationOption) {
-                             notification((RxNotificationOption) option, false);
-                         } else if (option instanceof RxSettingOption) {
-                             setting((RxSettingOption) option, false);
-                         } else if (option instanceof RxInstallOption) {
-                             install((RxInstallOption) option, false);
-                         } else if (option instanceof RxOverlayOption) {
-                             overlay((RxOverlayOption) option, false);
-                         }
-                     })
-                     .cancel(cancelable)
-                     .show();
-    }
 
     /**
      * @param option
-     * @param isNeedShowDialog 是否需要展示dialog , 防止重复
      */
-    private void runtime(RxRunTimeOption option, boolean isNeedShowDialog) {
-        if (!isNeedShowDialog || AndPermission.hasPermissions(activity, option.permissionGroup)) {
-            //有权限 或者 isNeedShowDialog == false 或者没有弹框文字
-            AndPermission.with(activity)
-                         .runtime()
-                         .permission(option.permissionGroup)
-                         .rationale(new SampleRationale<List<String>>())
-                         .onGranted(new MyAction<List<String>>(option, true))
-                         .onDenied(new RuntimeAction(option))
-                         .start();
-        } else if (!AndPermission.hasPermissions(activity, option.permissionGroup)) {
-            showDialog(option);
-        }
+    @SuppressLint("WrongConstant")
+    private void runtime(RxRunTimeOption option) {
+        AndPermission.with(context)
+                .runtime()
+                .permission(option.permissionGroup)
+                .rationale(option.rationale != null ? option.rationale : new DialogRationale(option))
+                .onGranted(new CallAction<>(option, true))
+                .onDenied(new CallAction(option,false))
+                .start();
     }
+
 
     /**
      * 通知权限
      *
      * @param option
-     * @param isNeedShowDialog
      */
-    private void notification(RxNotificationOption option, boolean isNeedShowDialog) {
-        if (NotificationManagerCompat.from(activity).areNotificationsEnabled() ||
-            !isNeedShowDialog)
-        {
-            //通知栏可以使用
-            AndPermission.with(activity)
-                         .notification()
-                         .permission()
-                         .rationale(new SampleRationale<Void>())
-                         .onGranted(new MyAction<Void>(option, true))
-                         .onDenied(new MyAction<Void>(option, false))
-                         .start();
-        } else if (!NotificationManagerCompat.from(activity).areNotificationsEnabled()) {
-            showDialog(option);
-        }
+    private void notification(RxNotificationOption option) {
+        //通知栏可以使用
+        AndPermission.with(context)
+                .notification()
+                .permission()
+                .rationale(option.rationale != null ? option.rationale : new DialogRationale(option))
+                .onGranted(new CallAction<>(option, true))
+                .onDenied(new CallAction<>(option, false))
+                .start();
     }
 
     /**
@@ -531,118 +349,67 @@ public class RxPermission {
      * 允许程序读取或写入系统设置
      *
      * @param option
-     * @param isNeedShowDialog
      */
-    private void setting(RxSettingOption option, boolean isNeedShowDialog) {
-        if (isCanWrite() || !isNeedShowDialog) {
-            AndPermission.with(activity)
-                         .setting()
-                         .write()
-                         .rationale(new SampleRationale<Void>())
-                         .onGranted(new MyAction<Void>(option, true))
-                         .onDenied(new MyAction<Void>(option, false))
-                         .start();
-        } else if (!isCanWrite()) {
-            showDialog(option);
-        }
+    private void setting(RxSettingOption option) {
+        AndPermission.with(context)
+                .setting()
+                .write()
+                .rationale(option.rationale != null ? option.rationale : new DialogRationale<>(option))
+                .onGranted(new CallAction<>(option, true))
+                .onDenied(new CallAction<>(option, false))
+                .start();
     }
+
+    private void overlay(RxOverlayOption option) {
+        AndPermission.with(context)
+                .overlay()
+                .rationale(option.rationale != null ? option.rationale : new DialogRationale<>(option))
+                .onGranted(new CallAction<>(option, true))
+                .onDenied(new CallAction<>(option, false))
+                .start();
+    }
+
+
+    private void install(RxInstallOption option) {
+        AndPermission.with(context)
+                .install()
+                .file(option.file)
+                .rationale(option.rationale != null ? option.rationale : new DialogRationale<>(option))
+                .onGranted(new CallAction<>(option, true))
+                .onDenied(new CallAction<>(option, false))
+                .start();
+    }
+
+    @Override
+    protected XPermission addOption(PermissionOption option) {
+        permissionList.add(option);
+        return this;
+    }
+
+    public static volatile int index = 0;
 
     /**
-     * 是否能读写
-     *
-     * @return
+     * 开启所有的事务
      */
-    private boolean isCanWrite() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return Settings.System.canWrite(activity);
-        }
-        return true;
-    }
-
-    private void overlay(RxOverlayOption option, boolean isNeedShowDialog) {
-        if (canOverlay() || !isNeedShowDialog) {
-            AndPermission.with(activity)
-                         .overlay()
-                         .rationale(new SampleRationale<Void>())
-                         .onGranted(new MyAction<Void>(option, true))
-                         .onDenied(new MyAction<Void>(option, false))
-                         .start();
-        } else if (!canOverlay()) {
-            showDialog(option);
-        }
-    }
-
-
-    private void install(RxInstallOption option, boolean isNeedShowDialog) {
-        if (canInstall() || !isNeedShowDialog) {
-            AndPermission.with(activity)
-                         .install()
-                         .file(option.file)
-                         .rationale(new SampleRationale<File>())
-                         .onGranted(new MyAction<File>(option, true))
-                         .onDenied(new MyAction<File>(option, false))
-                         .start();
-        } else if (!canInstall()) {
-            showDialog(option);
-        }
-    }
-
-    /**
-     * 是否能安装应用
-     *
-     * @return
-     */
-    private boolean canInstall() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            return activity.getPackageManager().canRequestPackageInstalls();
-        }
-        return true;
-    }
-
-    /**
-     * 不同的版本悬浮窗权限的判断方法
-     *
-     * @return
-     */
-    private boolean canOverlay() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return true;
-        }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            try {
-                Class cls = Class.forName("android.content.Context");
-                Field declaredField = cls.getDeclaredField("APP_OPS_SERVICE");
-                declaredField.setAccessible(true);
-                Object obj = declaredField.get(cls);
-                if (!(obj instanceof String)) {
-                    return false;
-                }
-                String str2 = (String) obj;
-                obj = cls.getMethod("getSystemService", String.class).invoke(activity, str2);
-                cls = Class.forName("android.app.AppOpsManager");
-                Field declaredField2 = cls.getDeclaredField("MODE_ALLOWED");
-                declaredField2.setAccessible(true);
-                Method checkOp = cls.getMethod("checkOp", Integer.TYPE, Integer.TYPE, String.class);
-                int result = (Integer) checkOp.invoke(obj, 24, Binder.getCallingUid(),
-                        activity.getPackageName());
-                return result == declaredField2.getInt(cls);
-            } catch (Exception e) {
-                return false;
+    @Override
+    public void request() {
+        if (permissionList.size() > 0) {
+            PermissionOption option = permissionList.removeFirst();
+            if (option instanceof RxRunTimeOption) {
+                runtime((RxRunTimeOption) option);
+            } else if (option instanceof RxNotificationOption) {
+                notification((RxNotificationOption) option);
+            } else if (option instanceof RxSettingOption) {
+                setting((RxSettingOption) option);
+            } else if (option instanceof RxInstallOption) {
+                install((RxInstallOption) option);
+            } else if (option instanceof RxOverlayOption) {
+                overlay((RxOverlayOption) option);
             }
         } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                AppOpsManager appOpsMgr = (AppOpsManager) activity.getSystemService(
-                        Context.APP_OPS_SERVICE);
-                if (appOpsMgr == null) {
-                    return false;
-                }
-                int mode = appOpsMgr.checkOpNoThrow("android:system_alert_window",
-                        android.os.Process.myUid(), activity.getPackageName());
-                return mode == AppOpsManager.MODE_ALLOWED || mode == AppOpsManager.MODE_IGNORED;
-            } else {
-                return Settings.canDrawOverlays(activity);
+            if (onCompleteListener != null) {
+                onCompleteListener.onComplete();
             }
         }
     }
-
 }

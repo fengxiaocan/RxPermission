@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <style name="Permission.Theme.Activity.Transparent">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="Permission.Theme.Dialog" parent="android:Theme.Material.Dialog.NoActionBar" />
+
+    <style name="Permission.Widget.Progress" parent="@android:style/Widget.Material.ProgressBar" />
+
+    <style name="Permission.Widget.Progress.Wait">
+        <item name="android:indeterminateOnly">true</item>
+        <item name="android:indeterminateTint">@android:color/white</item>
+    </style>
+
+</resources>

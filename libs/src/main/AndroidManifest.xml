@@ -1,3 +1,40 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.app.libs">
+
+    <permission
+        android:name="${applicationId}.andpermission.bridge"
+        android:permissionGroup="${applicationId}.andpermission"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="${applicationId}.andpermission.bridge" />
+
+    <application>
+        <service
+            android:name="com.app.permission.bridge.BridgeService"
+            android:exported="false"
+            android:permission="${applicationId}.andpermission.bridge"
+            android:process=":permission">
+            <intent-filter>
+                <action android:name="${applicationId}.andpermission.bridge" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name="com.app.permission.bridge.BridgeActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:permission="${applicationId}.andpermission.bridge"
+            android:process=":permission"
+            android:theme="@style/Permission.Theme.Activity.Transparent" />
+
+        <provider
+            android:name="com.app.permission.FileProvider"
+            android:authorities="${applicationId}.file.path.share"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/permission_file_paths" />
+        </provider>
+    </application>
 </manifest>
